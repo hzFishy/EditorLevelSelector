@@ -15,7 +15,8 @@ void UBDC_LevelSelectorSettings::SaveToProjectDefaultConfig()
 	TryUpdateDefaultConfigFile();
 }
 
-UBDC_LevelSelectorSettings::UBDC_LevelSelectorSettings()
+UBDC_LevelSelectorSettings::UBDC_LevelSelectorSettings():
+	bDisplayCameraFavoritesOverlay(false)
 {
 	CategoryName = TEXT("Plugins");
 	SectionName = TEXT("BDC Level Selector");
@@ -25,9 +26,10 @@ void UBDC_LevelSelectorSettings::AddFavorite(UWorld* TargetedLevel)
 {
 	if (TargetedLevel)
 	{
-		if(const FSoftObjectPath Path(TargetedLevel); !FavoriteLevels.Contains(Path))
+		auto SoftLevel = TSoftObjectPtr<UWorld>(TargetedLevel);
+		if (!FavoriteLevels.Contains(SoftLevel))
 		{
-			FavoriteLevels.Add(Path);
+			FavoriteLevels.Add(SoftLevel);
 		}
 		SaveToProjectDefaultConfig();
 	}
@@ -37,8 +39,8 @@ void UBDC_LevelSelectorSettings::RemoveFavorite(UWorld* TargetedLevel)
 {
 	if (TargetedLevel)
 	{
-		const FSoftObjectPath Path(TargetedLevel);
-		FavoriteLevels.Remove(Path);
+		auto SoftLevel = TSoftObjectPtr<UWorld>(TargetedLevel);
+		FavoriteLevels.Remove(SoftLevel);
 		SaveToProjectDefaultConfig();
 	}
 }
@@ -47,8 +49,8 @@ void UBDC_LevelSelectorSettings::SetLevelTag(UWorld* TargetedLevel, FGameplayTag
 {
 	if (TargetedLevel)
 	{
-		const FSoftObjectPath Path(TargetedLevel);
-		LevelTags.Add(Path, NewTag);
+		auto SoftLevel = TSoftObjectPtr<UWorld>(TargetedLevel);
+		LevelTags.Add(SoftLevel, NewTag);
 		SaveToProjectDefaultConfig();
 	}
 }
@@ -57,8 +59,8 @@ FGameplayTag UBDC_LevelSelectorSettings::GetLevelTag(UWorld* TargetedLevel)
 {
 	if (TargetedLevel)
 	{
-		const FSoftObjectPath Path(TargetedLevel);
-		if (const FGameplayTag* Found = LevelTags.Find(Path))
+		auto SoftLevel = TSoftObjectPtr<UWorld>(TargetedLevel);
+		if (const FGameplayTag* Found = LevelTags.Find(SoftLevel))
 		{
 			return *Found;
 		}

@@ -43,8 +43,8 @@ bool FLevelSelectorItem::IsFavorite() const
 {
     if (const UBDC_LevelSelectorSettings* Settings = GetDefault<UBDC_LevelSelectorSettings>())
     {
-       const FSoftObjectPath Path = AssetData.GetSoftObjectPath();
-       return Settings->FavoriteLevels.Contains(Path);
+       auto SoftLevel = TSoftObjectPtr<UWorld>(AssetData.GetSoftObjectPath());
+       return Settings->FavoriteLevels.Contains(SoftLevel);
     }
     return false;
 }
@@ -199,12 +199,12 @@ void SLevelSelectorComboBox::OnAssetRegistryFilesLoaded()
     {
        FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
 
-       TSet<FSoftObjectPath> FavoriteLevelsToRemove;
-       for (const FSoftObjectPath& FavoritePath : MutableSettings->FavoriteLevels)
+       TArray<TSoftObjectPtr<UWorld>> FavoriteLevelsToRemove;
+       for (const auto& FavoritePath : MutableSettings->FavoriteLevels)
        {
           if (FavoritePath.IsValid())
           {
-             const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FavoritePath);
+             const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FavoritePath.ToSoftObjectPath());
              if (!AssetData.IsValid())
              {
                 FavoriteLevelsToRemove.Add(FavoritePath);
@@ -212,13 +212,13 @@ void SLevelSelectorComboBox::OnAssetRegistryFilesLoaded()
           }
        }
        
-       TArray<FSoftObjectPath> HoldKeys;
+       TArray<TSoftObjectPtr<UWorld>> HoldKeys;
        MutableSettings->LevelTags.GetKeys(HoldKeys);
-       for (const FSoftObjectPath& KeyPath : HoldKeys)
+       for (const auto& KeyPath : HoldKeys)
        {
           if (KeyPath.IsValid())
           {
-             const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(KeyPath);
+             const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(KeyPath.ToSoftObjectPath());
              if (!AssetData.IsValid())
              {
                 MutableSettings->LevelTags.Remove(KeyPath);
@@ -226,9 +226,9 @@ void SLevelSelectorComboBox::OnAssetRegistryFilesLoaded()
           }
        }
 
-       for (const FSoftObjectPath& L : FavoriteLevelsToRemove)
+       for (const auto& LevelToRemove : FavoriteLevelsToRemove)
        {
-          MutableSettings->FavoriteLevels.Remove(L);
+          MutableSettings->FavoriteLevels.Remove(LevelToRemove);
        }
     }
     
@@ -302,11 +302,11 @@ void SLevelSelectorComboBox::PopulateLevelList()
        return;
     }
 
-    for (const FSoftObjectPath& FavoritePath : Settings->FavoriteLevels)
+    for (const auto& FavoritePath : Settings->FavoriteLevels)
     {
        if (FavoritePath.IsValid())
        {
-          if (const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FavoritePath); AssetData.IsValid())
+          if (const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FavoritePath.ToSoftObjectPath()); AssetData.IsValid())
           {
              AllLevels.Add(FLevelSelectorItem::Create(AssetData));
           }
@@ -346,11 +346,13 @@ void SLevelSelectorComboBox::SortLevelList()
        AllLevels.Sort([&](const TSharedPtr<FLevelSelectorItem>& A, const TSharedPtr<FLevelSelectorItem>& B)
        {
           const FSoftObjectPath PathA = A->AssetData.GetSoftObjectPath();
+          auto SoftLevelA = TSoftObjectPtr<UWorld>(PathA);
           const FSoftObjectPath PathB = B->AssetData.GetSoftObjectPath();
+          auto SoftLevelB = TSoftObjectPtr<UWorld>(PathB);
 
-          const bool bAIsFavorite = Settings->FavoriteLevels.Contains(PathA);
+          const bool bAIsFavorite = Settings->FavoriteLevels.Contains(SoftLevelA);
 
-          if (const bool bBIsFavorite = Settings->FavoriteLevels.Contains(PathB); bAIsFavorite != bBIsFavorite)
+          if (const bool bBIsFavorite = Settings->FavoriteLevels.Contains(SoftLevelB); bAIsFavorite != bBIsFavorite)
           {
              return bAIsFavorite;
           }
@@ -449,7 +451,8 @@ TSharedRef<SWidget> SLevelSelectorComboBox::CreateSelectedItemWidget(const TShar
     FString TagString = TEXT("");
     if (Settings)
     {
-       if (const FGameplayTag* FoundTag = Settings->LevelTags.Find(InItem->AssetData.GetSoftObjectPath()); FoundTag && FoundTag->IsValid())
+    	auto SoftLevel = TSoftObjectPtr<UWorld>(InItem->AssetData.GetSoftObjectPath());
+    	if (const FGameplayTag* FoundTag = Settings->LevelTags.Find(SoftLevel); FoundTag && FoundTag->IsValid())
         {
             FString TagName = FoundTag->ToString();
             TArray<FString> TagParts;
@@ -611,7 +614,8 @@ TSharedRef<SWidget> SLevelSelectorComboBox::CreateTagSelectionWidget(const TShar
     const FSoftObjectPath LevelPath(InItem->AssetData.GetSoftObjectPath());
     UBDC_LevelSelectorSettings* Settings = GetMutableDefault<UBDC_LevelSelectorSettings>();
 
-    const FGameplayTag* CurrentTag = Settings->LevelTags.Find(LevelPath);
+	auto SoftLevel = TSoftObjectPtr<UWorld>(LevelPath);
+    const FGameplayTag* CurrentTag = Settings->LevelTags.Find(SoftLevel);
 
     return SNew(SComboButton)
        .ButtonContent()
@@ -733,10 +737,11 @@ FGameplayTag SLevelSelectorComboBox::GetItemTag(const TSharedPtr<FLevelSelectorI
     }
     if (const UBDC_LevelSelectorSettings* Settings = GetDefault<UBDC_LevelSelectorSettings>())
     {
-        if (const FGameplayTag* Found = Settings->LevelTags.Find(InItem->AssetData.GetSoftObjectPath()))
-        {
-            return *Found;
-        }
+       auto SoftLevel = TSoftObjectPtr<UWorld>(InItem->AssetData.GetSoftObjectPath());
+       if (const FGameplayTag* Found = Settings->LevelTags.Find(SoftLevel))
+       {
+          return *Found;
+       }
     }
     return FGameplayTag();
 }

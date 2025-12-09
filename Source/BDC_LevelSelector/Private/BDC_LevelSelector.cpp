@@ -7,6 +7,8 @@
 * and are used with permission.
 */
 #include "BDC_LevelSelector.h"
+
+#include "BDC_LevelSelectorSettings.h"
 #include "SLevelSelectorComboBox.h"
 #include "SLevelSelectorCameraOverlay.h"
 #include "LevelEditor.h"
@@ -65,6 +67,8 @@ void FBDC_LevelSelectorModule::ShutdownModule()
 #pragma region Toolbar Extension
 void FBDC_LevelSelectorModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
+	//UE_LOG(LogBDCLevelSelector, Warning, TEXT("BDC_LevelSelectorModule::AddToolbarExtension() is called."));
+
 	Builder.AddWidget(
 		SAssignNew(LevelSelectorWidget, SLevelSelectorComboBox)
 	);
@@ -85,18 +89,23 @@ void FBDC_LevelSelectorModule::RefreshOverlay()
 	if (!FModuleManager::Get().IsModuleLoaded("LevelEditor")) return;
 
 	FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
+
+	const auto* Settings = GetDefault<UBDC_LevelSelectorSettings>();
+
+	if (Settings->bDisplayCameraFavoritesOverlay)
+	{
+		if (!OverlayWidget.IsValid())
+		{
+			OverlayWidget = SNew(SLevelSelectorCameraOverlay);
+		}
+
+		auto ActiveViewportInterface = LevelEditorModule.GetFirstActiveLevelViewport();
 	
-	if (!OverlayWidget.IsValid())
-	{
-		OverlayWidget = SNew(SLevelSelectorCameraOverlay);
-	}
-
-	auto ActiveViewportInterface = LevelEditorModule.GetFirstActiveLevelViewport();
-
-	if (const TSharedPtr<SLevelViewport> ActiveViewport = StaticCastSharedPtr<SLevelViewport>(ActiveViewportInterface); ActiveViewport.IsValid())
-	{
-		ActiveViewport->RemoveOverlayWidget(OverlayWidget.ToSharedRef());
-		ActiveViewport->AddOverlayWidget(OverlayWidget.ToSharedRef());
+		if (const TSharedPtr<SLevelViewport> ActiveViewport = StaticCastSharedPtr<SLevelViewport>(ActiveViewportInterface); ActiveViewport.IsValid())
+		{
+			ActiveViewport->RemoveOverlayWidget(OverlayWidget.ToSharedRef());
+			ActiveViewport->AddOverlayWidget(OverlayWidget.ToSharedRef());
+		}
 	}
 }
 

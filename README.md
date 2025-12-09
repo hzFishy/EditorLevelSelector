@@ -1,3 +1,8 @@
+# Fishy changes
+- Added DisplayCameraFavoritesOverlay to the plugin settings to make the camera overlay optional since it takes some space in the level viewport.
+- Removed unnecessary logs.
+- Changed FavoriteLevels and LevelTags from ugly `FSoftObjectPath` to `TSoftObjectPtr<UWorld>` to filter the picker.
+
 # BDC_LevelSelector  (V 1.1)
 ![LevelSelectorThumb](https://github.com/BDCPatrick/BDC_LevelSelector/blob/main/Resources/Thumb.png?raw=true)
 ![LevelSelectorPreview](https://github.com/BDCPatrick/BDC_LevelSelector/blob/main/Resources/Level_Selector_Preview.png?raw=true)

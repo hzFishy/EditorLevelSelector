@@ -32,12 +32,16 @@ public:
 
 	/** A set of favorite levels. These levels will always appear at the top of the list. */
 	UPROPERTY(Config, EditAnywhere, Category = "Level Selector")
-	TSet<FSoftObjectPath>FavoriteLevels;
+	TArray<TSoftObjectPtr<UWorld>> FavoriteLevels;
 	
 	/** A set of favorite levels. These levels will always appear at the top of the list. */
 	UPROPERTY(Config, EditAnywhere, Category = "Level Selector")
-	TMap<FSoftObjectPath, FGameplayTag> LevelTags;
+	TMap<TSoftObjectPtr<UWorld>, FGameplayTag> LevelTags;
 
+	/** Restart the editor to apply the changes of this variable */
+	UPROPERTY(Config, EditAnywhere, Category = "Level Selector")
+	bool bDisplayCameraFavoritesOverlay;
+	
 	/** Adds a level to the favorite levels set. */
 	void AddFavorite(UWorld* TargetedLevel);
 
