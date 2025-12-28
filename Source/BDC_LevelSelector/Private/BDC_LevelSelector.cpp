@@ -23,8 +23,6 @@ DEFINE_LOG_CATEGORY_STATIC(LogBDCLevelSelector, All, All);
 #pragma region Module Lifecycle
 void FBDC_LevelSelectorModule::StartupModule()
 {
-	UE_LOG(LogBDCLevelSelector, Warning, TEXT("BDC_LevelSelectorModule::StartupModule() is called."));
-
 	if (!IsRunningCommandlet())
 	{
 		FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
@@ -67,8 +65,6 @@ void FBDC_LevelSelectorModule::ShutdownModule()
 #pragma region Toolbar Extension
 void FBDC_LevelSelectorModule::AddToolbarExtension(FToolBarBuilder& Builder)
 {
-	//UE_LOG(LogBDCLevelSelector, Warning, TEXT("BDC_LevelSelectorModule::AddToolbarExtension() is called."));
-
 	Builder.AddWidget(
 		SAssignNew(LevelSelectorWidget, SLevelSelectorComboBox)
 	);
